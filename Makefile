@@ -68,6 +68,7 @@
 # smallz80:	Stack180 SmallZ80 system
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
+# timewarp: Timewarp NS32K board (NS32032 Demo Kit recreation)
 # tiny68k:	Bill Shen's Tiny68K or T68KRC
 # tm4c129x:	Texas Instruments Tiva C Series Boards
 # to8:		Thomson TO8/TO9+
@@ -91,7 +92,7 @@
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
 # zxuno:	ZX Uno FPGA system
 
-TARGET ?= zrc
+TARGET ?= timewarp
 
 include version.mk
 
