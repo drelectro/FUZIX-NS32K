@@ -165,31 +165,33 @@ int tty_open(uint_fast8_t minor, uint16_t flag)
 {
 	register struct tty *t;
 	irqflags_t irq;
-
+	kputs("\ntty_open:\n");	
 	if (minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
 
 	t = &ttydata[minor];
-
+	kprintf ("tty_open: ttydata at %p\n", &ttydata);
 	/*
 	 *	If the tty has users but is marked dead then we are still
 	 *	cleaning up from a carrier drop. If it didn't have users
 	 *	then this is fine.
 	 */
+	kprintf ("tty_open: minor=%d, users=%d, flag=0x%X\n", minor, t->users, t->flag); 
 	if (t->users) {
 		if (t->flag & TTYF_DEAD) {
 		        udata.u_error = ENXIO;
 		        return -1;
 	        }
-	        t->users++;
-	        return 0;
-        }
+	    t->users++;
+	    return 0;
+    }
 
-        t->flag &= ~TTYF_DEAD;
-
+    t->flag &= ~TTYF_DEAD;
+	kputs	 ("tty_open: setting up tty\n");
 	tty_setup(minor, 0);
+	kputs	 ("tty_open: tty setup done\n");
 
 	/*
 	 *	Do not wait for carrier in these cases. If the port has
@@ -198,7 +200,7 @@ int tty_open(uint_fast8_t minor, uint16_t flag)
 	 */
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 		goto out;
-
+	
 	/* Wait for carrier */
 	irq = di();
         if (!tty_carrier(minor)) {

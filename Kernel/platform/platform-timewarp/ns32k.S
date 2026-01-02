@@ -77,8 +77,8 @@ init_early:
 #
 init_hardware:
 # set system RAM size(hardcode hacks for now) TODO
-	movw	1024,_ramsize(pc)
-	movw	1024-64,_procmem(pc)		# guesses for now
+	movw	256,_ramsize(pc)
+	movw	256-64,_procmem(pc)		# guesses for now
 	bsr	_program_vectors
 # TODO timer enable etc
 	ret	0
@@ -105,10 +105,10 @@ map_save:
 outchar:
 	movw	r1,tos
 outcharw:
-	movb	0xFE0014(pc),r1
+	movb	@0xFE0014,r1
 	andb	0x20,r1
 	beq	outcharw
-	movb	r0,0xFE0000(pc)
+	movb	r0,@0xFE0000
 	movw	tos,r1
 	ret	0
 

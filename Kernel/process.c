@@ -1,5 +1,5 @@
 #undef DEBUG_SYSCALL		/* turn this on to enable syscall tracing */
-#undef DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
+#define DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
@@ -36,7 +36,7 @@ static void do_psleep(void *event, uint_fast8_t state)
 #ifdef DEBUG_SLEEP
 	        kprintf("psleep(0x%p) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
 #endif
-		panic(PANIC_VOODOO);
+		panic(PANIC_VOODOO);		
 	}
 
 	udata.u_ptab->p_status = state;
@@ -367,6 +367,7 @@ ptptr ptab_alloc(void)
 
 	irq = di();
 	for (p = ptab; p < ptab_end; p++) {
+		//kprintf("ptab_alloc: checking ptab[0x%p] status=%d\n", p, p->p_status);
 		if (p->p_status == P_EMPTY) {
 			newp = p;
 			/* zero process structure */
@@ -393,6 +394,7 @@ ptptr ptab_alloc(void)
 				newp->p_pgrp = udata.u_ptab->p_pgrp;
 				memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
 			}
+			//kprintf("ptab_alloc: allocated new ptab[0x%p] pid=%d\n", newp, newp->p_pid);
 			if (pagemap_alloc(newp) == 0) {
 				newp->p_status = P_FORKING;
 				nproc++;

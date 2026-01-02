@@ -1,9 +1,19 @@
-** ENGINEERING WORK IN PROGRESS **
+** Warning this is probably not the repo you're looking for **
 
-The Z80 side of the tree is currently moving to the new compiler including
-work on the compiler, linker and kernel. Thus some bits of it require you
-have absolutely bleeding edge pieces all around. I would suggest avoiding
-working on this tree for Z80 stuff right now. Non Z80 should be just fine.
+This is a fork of the Fuzix project to target the ancient ns32k.
+I recently (2025) resurected a set of NS32K parts which were supplied as a "demo kit" without a pcb.
+See https://github.com/drelectro/ns32k-timewarp for more details
+
+Having got the hardware working this is an attempt to get something useful running on the board
+simply for the sake of doing so.
+
+I do not anticipate many other people will find this work useful so I'm not currently planning
+to push any work I do here back to the main Fuzix project as that would result in an unnecessary 
+maintenance burden on the project maintainers.
+
+And by extension I have no plans to support any processor other than the NS32032 myself, and 
+trying to use this repository for any other target probably won't work.
+
 
 **FuzixOS**: Because Small Is Beautiful
 

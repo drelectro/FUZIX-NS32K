@@ -33,6 +33,8 @@ relocate:
 #	And this is where we enter the code in proper location
 #
 start:
+		//lprd sp,0x3fffc		# Set stack to top of memory
+
 		# Stick our exception handler pointer in 0x80000
 		# FIXME
 		# Set up the ROM int and map tables.
@@ -60,9 +62,11 @@ wipebss:
 		lprd sp,r0
 		/* udata global */
 		addr _udata_block,r6
+
 		bsr init_early
 		bsr init_hardware
 		bsr _fuzix_main
+		
 		sprw psr,r0		# Interrupts back off
 		andw 0xF7FF,r0
 		lprw psr,r0

@@ -2,9 +2,14 @@ OUTPUT_ARCH(ns32k)
 
 SEARCH_DIR(.)
 
+/*
+ * Modified from 
+ * ram (rwx) : ORIGIN = 0x8000, LENGTH = 0x80000
+ */
+
 MEMORY
 {
-  ram (rwx) : ORIGIN = 0x08000, LENGTH = 0x30000
+  ram (rwx) : ORIGIN = 0x09000, LENGTH = 0x37000
 }
 
 /*

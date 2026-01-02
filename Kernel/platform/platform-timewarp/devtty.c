@@ -127,14 +127,15 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	struct termios *t = &ttydata[minor].termios;
 	uint16_t baud = t->c_cflag & CBAUD;
 
-	/* Wait for output to finish */
+	// Wait for output to finish 
 	if (flags) {
 		//while(!(uart->lsr & 0x40))
 		while(!(*(volatile unsigned char *)UART0_LSR & 0x40))
 			_sched_yield();
 	}
-	/* 16x50. Can actually be configured */
-	d = 0x80;	/* DLAB (so we can write the speed) */
+	/*
+	// 16x50. Can actually be configured 
+	d = 0x80;	// DLAB (so we can write the speed) 
 	d |= (t->c_cflag & CSIZE) >> 4;
 	if(t->c_cflag & CSTOPB)
 		d |= 0x04;
@@ -146,27 +147,28 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	*(volatile unsigned char *)UART0_LCR = d;
 	w = clocks[baud];
 	if (w == 0) {
-		/* Not available */
+		//Not available 
 		w = clocks[B38400];
 		t->c_cflag &= ~CBAUD;
 		t->c_cflag |= B38400;
 	}
-	//uart->data = w;		/* ls */
+	//uart->data = w;		// ls 
 	//uart->msier = w >> 8;
 	//uart->lcr = d & 0x7F;
-	//uart->msier = 0x09;	/* Modem and rx */
-	*(volatile unsigned char *)UART0_DLL = w;		/* ls */
+	//uart->msier = 0x09;	// Modem and rx 
+	*(volatile unsigned char *)UART0_DLL = w;		// 
 	*(volatile unsigned char *)UART0_DLH = w >> 8;
 	*(volatile unsigned char *)UART0_LCR = d & 0x7F;
-	*(volatile unsigned char *)UART0_IER = 0x09;	/* Modem and rx */
+	*(volatile unsigned char *)UART0_IER = 0x09;	// 
 
-	/* FIFO at higher rates, avoid for latency at low */
+	// FIFO at higher rates, avoid for latency at low 
 	if (baud > B1200)
-		//uart->fcr = 0x87;	/* FIFO 16 byte enable */
-		*(volatile unsigned char *)UART0_FCR = 0x87;	/* FIFO 16 byte enable */
+		//uart->fcr = 0x87;	// FIFO 16 byte enable 
+		*(volatile unsigned char *)UART0_FCR = 0x87;	/ FIFO 16 byte enable 
 	else
 		//uart->fcr = 0x07;
 		*(volatile unsigned char *)UART0_FCR = 0x07;
+	*/
 }
 
 int tty_carrier(uint_fast8_t minor)

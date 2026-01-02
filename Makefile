@@ -150,7 +150,10 @@ gtags:
 kernel: ltools
 	mkdir -p Images/$(TARGET)
 	+(cd Kernel; $(MAKE))
-
+	../ns32k-utils/bin2tds Kernel/fuzix.bin fuzix.tds
+	cp fuzix.tds /mnt/c/Temp/
+	cp Kernel/fuzix.bin /mnt/c/Temp/
+	
 diskimage: stand ltools libs apps kernel
 	mkdir -p Images/$(TARGET)
 	+(cd Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 256 65535)

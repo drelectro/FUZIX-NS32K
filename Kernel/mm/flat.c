@@ -84,7 +84,13 @@ static struct mem *mem_alloc(void)
 {
 	struct mem *p = &memblock[0];
 	int i;
+#ifdef DEBUG
+		kprintf("mem_alloc: looking for free memblock, PTABSIZE=%d\n", PTABSIZE);
+#endif
 	for (i = 0; i < PTABSIZE; i++) {
+#ifdef DEBUG
+		kprintf("mem_alloc: checking memblock[0x%p] users=%d\n", p, p->users);
+#endif
 		if (p->users == 0) {
 			p->users++;
 			p->last = -1;

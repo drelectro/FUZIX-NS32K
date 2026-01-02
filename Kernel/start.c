@@ -14,7 +14,7 @@ static uint8_t ro = 1;
  */
 
 #ifndef TTY_INIT_BAUD
-#define TTY_INIT_BAUD B9600
+#define TTY_INIT_BAUD B19200
 #endif
 
 static const struct termios ttydflt = {
@@ -28,12 +28,19 @@ static const struct termios ttydflt = {
 	 }
 };
 
+int dout (char c) {
+   while ((*(volatile unsigned char *)0xFE0014 & 0x20) == 0);
+   *(volatile unsigned char *)0xFE0000 = c;
+   return c;
+}
+
 void tty_init(void) {
         register struct tty *t = &ttydata[1];
         register uint_fast8_t i;
+
         for(i = 1; i <= NUM_DEV_TTY; i++) {
-		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
-		t++;
+			memcpy(&t->termios, &ttydflt, sizeof(struct termios));
+			t++;			
         }
 }
 
@@ -83,9 +90,11 @@ void create_init(void)
 
 	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
+	//kprintf("init process at %p\n", init_process);
 	udata.u_ptab = init_process;
 	init_process->p_top = udata.u_top;
 	map_init();
+	//kprintf("mapped init process\n");
 
 	/* wipe file table */
 	e = udata.u_files + UFTSIZE;
@@ -93,6 +102,7 @@ void create_init(void)
 		*j = NO_FILE;
 
 	makeproc(init_process, &udata);
+	//kprintf("made init process\n");
 
 	udata.u_insys = 1;
 	init_process->p_status = P_RUNNING;
@@ -346,14 +356,22 @@ void fuzix_main(void)
 	ramtop = (uaddr_t)PROGTOP;
 #endif
 
+	dout('^');
+
 	tty_init();
 
-	if (d_open(TTYDEV, 0) != 0)
+	dout('i');
+
+	if (d_open(TTYDEV, 0) != 0){
+		dout('x');
 		panic(PANIC_NOTTY);
+	}
+
+	dout('-');
 
 	/* Sign on messages */
 	kprintf(
-			"FUZIX version %s\n"
+			"\nFUZIX version %s\n"
 			"Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
 			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
@@ -383,9 +401,14 @@ void fuzix_main(void)
 	   scheduling and the like */
 	ptab_end = &ptab[maxproc];
 
+	kputs("Initializing ... \n");
 	bufinit();
+	//kputs("bufinit ok. \n");
 	fstabinit();
+	//kputs("fstabinit ok. \n");
 	pagemap_init();
+	//kputs("pagemap_init ok. \n");
+	kprintf ("Creating init process ...\n");
 	create_init();
 
 	/* Parameters message */
@@ -403,7 +426,9 @@ void fuzix_main(void)
 	kputs("ok.\n");
 
 	/* initialise hardware devices */
+	kputs("Initialising devices ... \n");
 	device_init();
+	kputs("Device init ok.\n");
 
 	do {
             old_progptr = progptr;
