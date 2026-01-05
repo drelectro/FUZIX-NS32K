@@ -5,6 +5,7 @@
 	.globl	_plt_reboot
 	.globl	init_early
 	.globl	init_hardware
+	.globl  init_icu
 	.globl	_program_vectors
 	.globl	outchar
 	.globl	_plt_monitor
@@ -60,11 +61,11 @@ _plt_monitor:
 	sprw	psr,r0		# Interrupts back off
 	andw	0xF7FF,r0
 	lprw	psr,r0
-	br	_plt_monitor
+	br		_plt_monitor
 
 init_early:
 	addr	_udata_block(pc),_udata_shadow(pc)
-	addr	inttab,r0
+	addr	inttab,r0	
 	lprd	intbase,r0
 	addr	module,r0
 	lprw	mod,r0
@@ -82,6 +83,15 @@ init_hardware:
 	bsr	_program_vectors
 # TODO timer enable etc
 	ret	0
+
+init_icu:
+	movb 	0xff, r0
+	movb 	r0,@0xFFFE08 # Configure IR0-7 as active high 
+	movb 	0x00, r0
+	movb  	r0,@0xFFFE20 # Enable ICU
+	movb 	0xF7, r0
+	movb    r0,@0xFFFE14 # Unmask IR3 (UART0) 
+	ret 0
 
 #
 #	Nothing to do in NS32K - all set up once at boot

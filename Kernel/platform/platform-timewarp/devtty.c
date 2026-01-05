@@ -133,7 +133,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 		while(!(*(volatile unsigned char *)UART0_LSR & 0x40))
 			_sched_yield();
 	}
-	/*
+	
 	// 16x50. Can actually be configured 
 	d = 0x80;	// DLAB (so we can write the speed) 
 	d |= (t->c_cflag & CSIZE) >> 4;
@@ -156,19 +156,19 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	//uart->msier = w >> 8;
 	//uart->lcr = d & 0x7F;
 	//uart->msier = 0x09;	// Modem and rx 
-	*(volatile unsigned char *)UART0_DLL = w;		// 
-	*(volatile unsigned char *)UART0_DLH = w >> 8;
-	*(volatile unsigned char *)UART0_LCR = d & 0x7F;
-	*(volatile unsigned char *)UART0_IER = 0x09;	// 
+	//*(volatile unsigned char *)UART0_DLL = w;		// 
+	//*(volatile unsigned char *)UART0_DLH = w >> 8;
+	*(volatile unsigned char *)UART0_LCR = d & 0x7F;  // Clear DLAB
+	//*(volatile unsigned char *)UART0_IER = 0x09;	  // Enable rx and modem interrupts
+	*(volatile unsigned char *)UART0_IER = 0x01;	  // Enable rx interrupt
 
 	// FIFO at higher rates, avoid for latency at low 
 	if (baud > B1200)
 		//uart->fcr = 0x87;	// FIFO 16 byte enable 
-		*(volatile unsigned char *)UART0_FCR = 0x87;	/ FIFO 16 byte enable 
+		*(volatile unsigned char *)UART0_FCR = 0x87;	// FIFO 16 byte enable 
 	else
 		//uart->fcr = 0x07;
 		*(volatile unsigned char *)UART0_FCR = 0x07;
-	*/
 }
 
 int tty_carrier(uint_fast8_t minor)
@@ -212,5 +212,6 @@ void tty_interrupt(void)
 
 void plt_interrupt(void)
 {
+	//kputchar('T');
 	tty_interrupt();
 }

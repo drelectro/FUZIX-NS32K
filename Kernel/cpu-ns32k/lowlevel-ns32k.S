@@ -35,6 +35,7 @@
 	.globl	interrupt_handler
 
 nmi_handler:
+	#movb	'@',@0xFE0000
 	rett	0
 abort_handler:
 	enter	[r0,r1,r2,r3,r6],0
@@ -160,6 +161,7 @@ no_preempt:
 	cmpb	0,U_DATA__U_CURSIG(r6)
 	bne	with_signal
 no_signal:
+	movb 	0, @0xFFFE10 # Clear ISRV (temporary hack until we enable vectored interrupts)
 	exit	[r0,r1,r2,r3,r6]
 	rett	0
 #

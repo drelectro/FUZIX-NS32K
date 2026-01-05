@@ -54,8 +54,8 @@ start:
 wipebss:
 		movqd 0,0(r0)
 		addqd 4,r0
-		cmpd r1,r0
-		blt wipebss		# Check compare direction is right
+		cmpd r0,r1
+		blt wipebss		
 
 		/* FIXME: hard coded ugly */
 		addr _udata_block+1016,r0
@@ -65,6 +65,7 @@ wipebss:
 
 		bsr init_early
 		bsr init_hardware
+		bsr init_icu
 		bsr _fuzix_main
 		
 		sprw psr,r0		# Interrupts back off
