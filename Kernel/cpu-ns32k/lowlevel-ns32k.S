@@ -34,23 +34,31 @@
 	.globl	syscall_handler
 	.globl	interrupt_handler
 
+#define SPSR_U 0x100
+#define SPSR_S 0x200
+#define SPSR_P 0x400
+#define SPSR_I 0x800	
+
 nmi_handler:
 	#movb	'@',@0xFE0000
 	rett	0
+
 abort_handler:
+	movb	'A',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	0,tos
+	
 do_exception:
 	movd	_udata_shadow,r6
 	sprw	psr,r0
 	andw	0xF7FF,r0		# Disable interrupts
 	lprw	psr,r0
 	sprd	sp,tos
-	bsr	_exception
+	bsr		_exception
 	adjspb	-8
 	movb	U_DATA__U_CURSIG(r6),r0
 	cmpqb	0,r0
-	bne	with_signal
+	bne		with_signal
 	exit	[r0,r1,r2,r3,r6]
 	# Retry the instruction
 	rett	0
@@ -59,70 +67,82 @@ slave_handler:
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	1,tos
 	br	do_exception
+
 illegal_handler:
+	movb	'I',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	2,tos
 	br	do_exception
+
 divzero_handler:
+	movb	'Z',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	3,tos
 	br	do_exception
+
 flag_handler:
+	movb	'F',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	4,tos
 	br	do_exception
+
 breakpoint_handler:
+	movb	'B',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	5,tos
 	br	do_exception
+
 trace_handler:
+	movb	'T',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	6,tos
 	br	do_exception
+
 undefined_handler:
+	movb	'U',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	1,tos
-	br	do_exception
+	br		do_exception
+
 syscall_handler:
-	sprw	psr,r1
-	andw	0xF7FF,r1		# Disable interrupts
-	lprw	psr,r1
+	bicpsrw	SPSR_I			# Disable interrupts
+
 	# Top of stack must match what is expected by fork()
 	# see dofork.
 	enter	[r6],0
 	movd	_udata_shadow(pc),r6
-	sprd	usp,r1
+	bispsrw	SPSR_S			# Select SP1 (User)
+	sprd	sp,r1
 	movd	r1,U_DATA__U_SYSCALL_SP(r6)	# For brk checking
 	movb	r0,U_DATA__U_CALLNO(r6)
 	movqb	1,U_DATA__U_INSYS(r6);
-	sprd	usp,r0
+	sprd	sp,r0
+	bicpsrw	SPSR_S			# Back to SP0 (supervisor)
+
 	movd	4(r0),U_DATA__U_ARGN(r6)
 	movd	8(r0),U_DATA__U_ARGN1(r6)
 	movd	12(r0),U_DATA__U_ARGN2(r6)
 	movd	16(r0),U_DATA__U_ARGN3(r6)
 	movqb	1,_kernel_flag(pc)
-	sprw	psr,r0
-	orw	0x0800,r0		# Allow interrupts
-	lprw	psr,r0
-	bsr	_unix_syscall
-	sprw	psr,r1
-	andw	0xF7FF,r1		# Disable interrupts
-	lprw	psr,r1
+
+	bispsrw SPSR_I			# Enable interrupts
+	bsr		_unix_syscall
+	bicpsrw SPSR_I			# Disable interrupts
 	movqb	0,U_DATA__U_INSYS(r6)
 	movqb	0,_kernel_flag(pc)
 	movzwd	U_DATA__U_ERROR(r6),r1
 	cmpqw	0,r1
-	bne	sysc_err
+	bne		sysc_err
 	movd	U_DATA__U_RETVAL(r6),r0
 sysc_sig:
 	cmpqb	0,U_DATA__U_CURSIG(r6)
-	bne	return_via_signal
+	bne		return_via_signal
 	exit	[r6]
 	addqd	1,0(sp)		# Move past the SVC
 	rett	0
 sysc_err:
 	movqd	-1,r0
-	br	sysc_sig
+	br		sysc_sig
 
 	.globl return_via_signal	# For debug
 
@@ -132,7 +152,7 @@ return_via_signal:
 	exit	[r6]
 	enter	[r0,r1,r2,r3,r6],0
 	movd	_udata_shadow(pc),r6
-	br	with_signal
+	br		with_signal
 
 interrupt_handler:
 	# Save what the C compiler will not
@@ -140,12 +160,12 @@ interrupt_handler:
 	enter	[r0,r1,r2,r3,r6],0
 	movd	_udata_shadow(pc),r6
 	movqb	1,U_DATA__U_ININTERRUPT(r6)
-	bsr	_plt_interrupt
+	bsr		_plt_interrupt
 	movqb	0,U_DATA__U_ININTERRUPT(r6)
 	cmpqb	0,U_DATA__U_INSYS(r6)
-	bne	no_preempt
+	bne		no_preempt
 	cmpqb	0,_need_resched(pc)
-	beq	no_preempt
+	beq		no_preempt
 
 	# Pre-emption - as we are running with a separate user
 	# stack we don't have too much to do here
@@ -153,13 +173,13 @@ interrupt_handler:
 
 	movd	U_DATA__U_PTAB(r6),r0
 	cmpqb	P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
-	bne	no_ready
+	bne		no_ready
 	movqb	P_READY,P_TAB__P_STATUS_OFFSET(r0)
 no_ready:
-	bsr	_switchout
+	bsr		_switchout
 no_preempt:
 	cmpb	0,U_DATA__U_CURSIG(r6)
-	bne	with_signal
+	bne		with_signal
 no_signal:
 	movb 	0, @0xFFFE10 # Clear ISRV (temporary hack until we enable vectored interrupts)
 	exit	[r0,r1,r2,r3,r6]
@@ -183,12 +203,17 @@ no_signal:
 #	faulting.
 #
 with_signal:
+	movb	0,r0
+	jsr		pr0_debug
+
 	movzbd	U_DATA__U_CURSIG(r6),r0
 	movd	U_DATA__U_SIGVEC(r6)[r0:d],r1
 	movqd	0,U_DATA__U_SIGVEC(r6)[r0:d]
 	cmpqd	0,r1
-	beq	no_signal
-	sprd	usp,r0
+	beq		no_signal
+	bispsrw SPSR_S					# Select User Stack (SP1)
+	sprd	sp,r0
+	bicpsrw SPSR_S					# Back to supervisor stack (SP0)
 	subd	36,r0
 	# Now fill in the new frame
 	# Swap the PC and flags over so we can use ret easily
@@ -208,34 +233,55 @@ with_signal:
 	movqb	0,U_DATA__U_CURSIG(r6)
 	# Update our rett frame to the signal vector
 	movd	r1,24(sp)
-	lprd	usp,r0
+	bispsrw SPSR_S					# Select User Stack (SP1)
+	lprd	sp,r0
+	bicpsrw SPSR_S					# Back to supervisor stack (SP0)
 	exit	[r0,r1,r2,r3,r6]
 	rett	0		# into the signal handler
 
 _doexec:
-	enter	[],0
-	movd	8(fp),r0
-	# Put the supervisor stack back where we want it
-	addr	UBLOCK_SIZE(r6),r1
-	lprd	sp,r1
-	lprd	usp,U_DATA__U_ISP(r6)
-	# Interrupts off for the momentary period while insys is wrong
-	sprw	psr,r2
-	andw	0xF7FF,r2
-	lprw	psr,r2
-	movqb	0,U_DATA__U_INSYS(r6)
-	movqd	0,r2
-	movqd	0,r3
+    enter	[],0
+	#movd	_udata_shadow(pc),r6 # Optional seems OK without this
+
+    # Put the supervisor stack back where we want it
+    addr	UBLOCK_SIZE(r6),r1 		# UBLOCK_SIZE = 1024
+    lprd	sp,r1
+    
+	# Select User stack and set it to Initial Stack Pointer
+	#
+	# Do not use the "lprd usp" and "sprd usp" instructions
+	# They do not work as expected
+	# IDK whether that's a CPU thing or an assembler/compiler thing
+	#
+	# lprd	usp,U_DATA__U_ISP(r6) hangs the processor
+	# sprd  usp returns something other than the USP
+	#
+	# Instead set/clear the S bit in PSR the select SP1 (user) or SP0 (supervisor)
+	#
+	bispsrw SPSR_S					# Select User Stack (SP1)
+	lprd	sp,U_DATA__U_ISP(r6)	# U_DATA__U_ISP = 48
+
+    # Interrupts off for the momentary period while insys is wrong
+	bicpsrw SPSR_I
+    movqb	0,U_DATA__U_INSYS(r6)	#U_DATA__U_INSYS = 8
+
+    # Clear user registers we don't want to leak
+	movqd	0,r0
+	movqd	0,r1
+    movqd	0,r2
+    movqd	0,r3
 	movqd	0,r4
-	movqd	0,r5
-	movqd	0,r6
-	movqd	0,r7
-	# We want U S I set (user mode, user stack, interrupt on
-	movw	0x0B00,tos	# PSR and if we do DE mode module
-	sprw	mod,tos
-	movd	r0,tos
-	# TODO: clear fp registers if we do an FPU supporting part
-	rett	0			# To user space
+    movqd	0,r5
+    movqd	0,r6
+    movqd	0,r7
+
+    # Final rett frame to user space
+    movw	0x0B00,tos	# PSR (set U/S/I bits)
+    sprw	mod,tos		
+    movd	8(fp),r0	# reload entry PC
+    movd	r0,tos
+    rett	0			# To user space
+
 #
 #	Interrupt control. The CPU can support fancy vectored interrupts
 #	in which case you probably want to just mask the timer and stuff
@@ -251,7 +297,7 @@ ___hard_ei:
 	sprw	psr,r0
 	movw	r0,r1
 	andw	0x800,r0
-	orw	0x800,r1
+	orw		0x800,r1
 	lprw	psr,r1
 	ret	0
 ___hard_irqrestore:
@@ -264,39 +310,216 @@ ___hard_irqrestore:
 	ret	0
 
 outstring:
-	enter	[r0,r1,r2],0
-	movb	0(r1),r0
-	cmpqb	0,r0
-	beq	outdone
-	jsr	outchar
-	addqd	1,r1
-	br	outstring
-outdone:
-	exit	[r0,r1,r2]
-	ret	0
+    enter	[r0,r1,r2],0
+outstringl:	
+    movb	0(r1),r0
+    cmpqb	0,r0
+    beq	outdone_string
+    jsr	outchar
+    addqd	1,r1
+    br	outstringl
+outdone_string:
+    exit	[r0,r1,r2]
+    ret	0
 
 outstringhex:
-	enter	[r0,r1],0
+    enter	[r0,r1],0
 outstringhexl:
-	movb	0(r1),r0
-	cmpqb	0,r0
-	beq	outdone
-	bsr	outcharhex
-	addqd	1,r1
-	br	outstringhexl
+    movb	0(r1),r0
+    cmpqb	0,r0
+    beq	outdone_stringhex
+    bsr	outcharhex
+    addqd	1,r1
+    br	outstringhexl
+outdone_stringhex:
+    exit	[r0,r1]
+    ret	0
 
 outcharhex:
-	movb	r0,tos
-	bsr	outonehex
-	movb	tos,r0
-outonehex:
-	andb	0xf0,r0
-	lshb	-4,r0
-	addb	'0',r0
-	cmpb	'9',r0
-	ble	digit
-	addqb	7,r0
-digit:	br	outchar(pc)
+    enter	[r1],0
+	movb	r0,r1
+	movb	r1,r0
+	lshb	-4,r0		# high nibble
+	bsr	outnibble
+	movb	r1,r0
+	andb	0x0F,r0		# low nibble
+	bsr	outnibble
+	exit	[r1]
+	ret	0
+
+outnibble:
+    andb	0x0F,r0
+    addb	'0',r0
+    cmpb	r0,'9'
+    ble	outnib_digit
+    addqb	7,r0
+outnib_digit:
+    jsr	outchar
+    ret	0
+
+outhex16:
+    # Print r0 as 8 hex digits
+    enter	[r2],0
+    movd	r0,r2
+	br 		outhex16a
+outhex32:
+    # Print r0 as 8 hex digits
+    enter	[r2],0
+    movd	r0,r2
+    movd	r2,r0
+    lshd	-24,r0
+    bsr	outcharhex
+    movd	r2,r0
+    lshd	-16,r0
+    bsr	outcharhex
+outhex16a:
+    movd	r2,r0
+    lshd	-8,r0
+    bsr	outcharhex
+    movd	r2,r0
+    bsr	outcharhex
+    exit	[r2]
+    ret	0
+
+outnl:
+    movb	'\r',r0
+    jsr	outchar
+    movb	'\n',r0
+    jsr	outchar
+    ret	0
+
+_debug_doexec_dump:
+    # r0 = entry PC (intended), r1 = address of rett-frame bytes to dump
+
+	bsr dump_entry
+	bsr dump_R0
+	bsr dump_R6
+	bsr dump_USP
+	bsr dump_SP
+	bsr dump_PSR
+	bsr dump_MOD
+	bsr dump_frame
+
+    ret	0
+
+dump_entry:
+    # Print entry PC
+	enter 	[r0, r1, r2],0
+    addr	msg_doexec(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    movd	8(fp),r0
+    bsr		outhex32
+    bsr		outnl
+	exit 	[r0, r1, r2]
+	ret		0
+
+dump_R0: 
+	# Print R0
+	enter 	[r1, r2],0
+    addr	msg_r0(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    bsr		outhex32
+    bsr		outnl
+	exit	[r1, r2]
+	ret 	0
+
+dump_R6:
+	# Print R6
+	enter 	[r0, r1],0
+    addr	msg_r6(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    movd	r6,r0
+    bsr		outhex32
+    bsr		outnl
+	exit	[r0,r1]
+	ret		0
+
+dump_USP:
+    # Print USP
+	enter 	[r0, r1, r2],0
+    addr	msg_usp(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    sprd	usp,r0
+    bsr		outhex32
+    bsr		outnl
+	exit	[r0, r1, r2]
+	ret 0
+
+dump_SP:
+	# Print SP 
+	# This just prints r0 with a different header
+	# Can't print SP here as we've already changed it to get here
+	enter 	[r0, r1, r2],0
+    addr	msg_sp(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    bsr		outhex32
+    bsr		outnl
+	exit	[r0, r1, r2]
+	ret 0
+
+dump_PSR:
+	# Print PSR
+	enter 	[r0, r1, r2],0
+	addr	msg_psr(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    sprw	psr,r0
+    bsr		outhex16
+    bsr		outnl
+	exit	[r0, r1, r2]
+	ret 0
+
+dump_MOD:
+	# Print MOD
+	enter 	[r0, r1, r2],0
+    addr	msg_mod(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    sprw	mod,r0
+    bsr		outhex16
+    bsr		outnl
+	exit	[r0, r1, r2]
+	ret 0
+
+dump_frame:
+	enter 	[r0, r1, r2, r3],0
+    # Dump 16 bytes from rett-frame address (r1 argument)
+    addr	msg_frame(pc),r2
+    movd	r2,r1
+    bsr		outstring
+
+    movd	12(fp),r3	# r3 = frame address passed in r1
+    movd	16,r2		# count
+dump_loop:
+    movb	0(r3),r0
+    bsr		outcharhex
+    movb	' ',r0
+    jsr		outchar
+    addqd	1,r3
+    addqd	-1,r2
+    cmpqd	0,r2
+    bne		dump_loop
+    bsr		outnl
+
+    exit	[r0,r1,r2,r3]
+    ret	0
+
+pr0_debug:
+	# Print debug message 
+	# This just prints r0 with a different header
+	enter 	[r0, r1, r2],0
+    addr	msg_debug(pc),r2
+    movd	r2,r1
+    bsr		outstring
+    bsr		outhex32
+    bsr		outnl
+	exit	[r0, r1, r2]
+	ret 0
 			
 outr0hex:	
 	enter	[r0,r1,r2],0
@@ -401,6 +624,39 @@ _vdso:
 
 	.data
 	.align	2
+
+msg_doexec:
+	.ascii "doexec entry PC: 0x"
+	.byte 0
+msg_r0:
+	.ascii "R0: 0x"
+	.byte 0
+msg_usp:
+	.ascii "USP: 0x"
+	.byte 0
+msg_isp:
+	.ascii "ISP:  0x"
+	.byte 0
+msg_sp:
+	.ascii "SP:  0x"
+	.byte 0
+msg_psr:
+	.ascii "PSR: 0x"
+	.byte 0
+msg_mod:
+	.ascii "MOD: 0x"
+	.byte 0
+msg_r6:
+	.ascii "R6: 0x"
+	.byte 0
+msg_frame:
+	.ascii "RETT frame bytes (16): "
+	.byte 0
+msg_debug:
+	.ascii "Debug: "
+	.byte 0
+
+
 _udata_shadow:
 	.long	0
 _kernel_flag:
@@ -409,3 +665,5 @@ _sys_cpu:
 	.byte	0
 _sys_cpu_feat:
 	.byte	0
+
+
