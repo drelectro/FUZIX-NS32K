@@ -90,7 +90,7 @@ void create_init(void)
 
 	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
-	//kprintf("init process at %p\n", init_process);
+	//kprintf("init process at %p PROGLOAD=%x\n", init_process, PROGLOAD);
 	udata.u_ptab = init_process;
 	init_process->p_top = udata.u_top;
 	map_init();
@@ -356,26 +356,28 @@ void fuzix_main(void)
 	ramtop = (uaddr_t)PROGTOP;
 #endif
 
-	dout('^');
+	//dout('^');
 
 	tty_init();
 
-	dout('i');
+	//dout('i');
 
 	if (d_open(TTYDEV, 0) != 0){
 		dout('x');
 		panic(PANIC_NOTTY);
 	}
 
-	dout('-');
+	//dout('-');
 
 	/* Sign on messages */
 	kprintf(
-			"\nFUZIX version %s\n"
+			"\nNS32K FUZIX version %s\n"
 			"Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
 			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
-			"Copyright (c) 2014-2025 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
+			"Copyright (c) 2014-2025 Alan Cox <alan@etchedpixels.co.uk>\n"
+			"Copyright (c) 2026 Mike Cornelius <dr@drelectro.com>\n"
+			"Devboot\n",
 			sysinfo.uname);
 
 	set_cpu_type();
@@ -422,8 +424,9 @@ void fuzix_main(void)
 #ifndef CONFIG_PLATFORM_LATE_EI
 	kputs("Enabling interrupts ... ");
 	__hard_ei();		/* Physical interrupts on */
-#endif
 	kputs("ok.\n");
+#endif
+	
 
 	/* initialise hardware devices */
 	kputs("Initialising devices ... \n");
@@ -444,9 +447,12 @@ void fuzix_main(void)
 	            kputs("failed\n");
 		    /* reset potentially altered state before prompting the user for command line again */
 	            progptr = old_progptr;
-		    argptr = old_argptr;
+		    	argptr = old_argptr;
 	            ro = MS_RDONLY;
-	    }
+
+				device_init();
+	    	}
+
         } while(m == NULL);
 
         /* Set the system time from the superblock. In turn user space will

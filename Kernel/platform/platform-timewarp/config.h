@@ -27,6 +27,8 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
+#define BOOTDEVICENAMES "hd#"
+
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
@@ -37,7 +39,11 @@
 #define MAX_BLKDEV 4
 
 #define CONFIG_IDE
+#define CONFIG_PPIDE
+
+
+
 
 #define plt_copyright()
 
-#define BOOTDEVICENAMES "hd#"
+

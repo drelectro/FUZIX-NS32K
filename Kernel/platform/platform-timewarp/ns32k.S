@@ -111,15 +111,14 @@ map_save:
 
 
 # outchar: Wait for UART TX idle, then print the char in r0
-
 outchar:
-	movw	r1,tos
+	enter 	[r1],0
+	addr 	@0xFE0000, r1
 outcharw:
-	movb	@0xFE0014,r1
-	andb	0x20,r1
-	beq	outcharw
-	movb	r0,@0xFE0000
-	movw	tos,r1
+	tbitb   5, 0x14(r1)
+	bfc		outcharw
+	movb	r0, 0x00(r1)
+	exit	[r1]
 	ret	0
 
 
@@ -137,10 +136,14 @@ _enable_dcache:
 	ret	0
 
 _get_usp:
-	sprd	usp,r0
+	bispsrw	SPSR_S		# Select SP1 (User)
+	sprd	sp,r0		# R1 = SP
+	bicpsrw	SPSR_S		# Back to SP0 (Supervisor)
 	ret	0
 _set_usp:
 	enter	[],0
 	movd	4(fp),r0
-	lprd	usp,r0
+	bispsrw	SPSR_S		# Select SP1 (User)
+	lprd	sp,r0		# R1 = SP
+	bicpsrw	SPSR_S		# Back to SP0 (Supervisor)
 	ret	0

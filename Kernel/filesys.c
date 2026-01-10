@@ -1239,8 +1239,10 @@ struct mount *fmount(uint16_t dev, register inoptr ino, uint16_t flags)
 
     /* Get the buffer with the superblock (block 1) */
     buf = bread(dev, 1, 0);
-    if (buf == NULL)
+    if (buf == NULL) {
+        kprintf ("fmount: cannot read superblock on dev 0x%x\n", dev);
         return NULL;
+    }
     blktok(fp, buf, 0, sizeof(struct filesys));
     brelse(buf);
 

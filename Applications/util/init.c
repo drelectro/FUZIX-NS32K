@@ -421,7 +421,8 @@ static void load_inittab(void)
 	close(fd);
 	sdata_end = sdata + st.st_size;
 	return;
-      fail:
+
+    fail:
 	close(fd);
 	execl("/bin/sh", "-sh", NULL);
 	execl("/bin/ssh", "-ssh", NULL);
@@ -586,7 +587,6 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, sigusr1);
 
 	/* remove any stale /etc/mtab file */
-
 	unlink("/etc/mtab");
 
 	/* clean up anything handed to us by the kernel */
@@ -598,10 +598,10 @@ int main(int argc, char *argv[])
 
 	do {
 		fdtty1 = open("/dev/tty1", O_RDWR|O_NOCTTY);
+		//*(volatile unsigned char *)0xFE0000 = '.';
 	} while (fdtty1 < 0);
 
 	/* make stdin, stdout and stderr point to /dev/tty1 */
-
 	dup(fdtty1);
 	dup(fdtty1);
 
@@ -615,10 +615,11 @@ int main(int argc, char *argv[])
 	membase = sbrk(0);
 
 	load_inittab();
+	putstr("inittab loaded\n");
 	parse_inittab();
-
+	putstr("inittab parsed\n");
 	boot_runlevel();
-
+	putstr("boot_runlevel done\n");
 	for (;;) {
 		clear_zombies(0);
 		if (dingdong) {

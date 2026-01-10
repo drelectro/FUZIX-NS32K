@@ -549,17 +549,17 @@ typedef struct u_data {
     uaddr_t     u_syscall_sp;   /* Stores SP when process makes system call */
     susize_t    u_retval;       /* Return value from sys call */
     int16_t     u_error;        /* Last error number */
-    void *      u_sp;           /* Stores SP when process is switchped */
+    void *      u_sp;           /* Stores SP when process is switched */
     bool        u_ininterrupt;  /* True when the interrupt handler is running (prevents recursive interrupts) */
     int8_t      u_cursig;       /* Next signal to be dispatched */
     arg_t       u_argn;         /* First C argument to the system call */
     arg_t       u_argn1;        /* Second C argument */
-    arg_t       u_argn2;	/* Third C argument */
+    arg_t       u_argn2;	    /* Third C argument */
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
-    usize_t	u_top;		/* Top of memory for this task */
-    uaddr_t	u_break;	/* Top of data space */
-    uaddr_t	u_codebase;	/* Platform base pointers */
+    usize_t	    u_top;		    /* Top of memory for this task */
+    uaddr_t	    u_break;	    /* Top of data space */
+    uaddr_t	    u_codebase;	    /* Platform base pointers */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
 
     uint8_t *   u_base;         /* Source or dest for I/O */

@@ -1,8 +1,8 @@
-#undef DEBUG_SYSCALL		/* turn this on to enable syscall tracing */
-#define DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
+#undef DEBUG_SYSCALL	/* turn this on to enable syscall tracing */
+#undef DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
-#undef DEBUGREALLYHARD		/* turn on getproc dumping */
-#undef DEBUG_PREEMPT		/* debug pre-emption */
+#undef DEBUGREALLYHARD	/* turn on getproc dumping */
+#undef DEBUG_PREEMPT	/* debug pre-emption */
 #undef DEBUG_NREADY		/* debug nready counting */
 
 #include <kernel.h>
@@ -366,7 +366,7 @@ ptptr ptab_alloc(void)
 	udata.u_error = EAGAIN;
 
 	irq = di();
-	for (p = ptab; p < ptab_end; p++) {
+	for (p = ptab; p < ptab_end; p++) {		
 		//kprintf("ptab_alloc: checking ptab[0x%p] status=%d\n", p, p->p_status);
 		if (p->p_status == P_EMPTY) {
 			newp = p;
@@ -402,9 +402,9 @@ ptptr ptab_alloc(void)
 				udata.u_error = ENOMEM;
 				newp = NULL;
 				break;
-	                }
+	        }
 			udata.u_error = 0;
-	                break;
+	        break;
 		}
 	}
 	irqrestore(irq);
@@ -973,7 +973,7 @@ void doexit(uint16_t val)
 		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
-                if (p->p_pgrp == udata.u_ptab->p_pid) {
+        if (p->p_pgrp == udata.u_ptab->p_pid) {
 			p->p_pgrp = 0;
 			ssig(p, SIGHUP);
 			ssig(p, SIGCONT);
@@ -995,9 +995,9 @@ void doexit(uint16_t val)
 #ifdef CONFIG_ACCT
 	acctexit(udata.u_ptab);
 #endif
-        udata.u_page = 0xFFFFU;
-        udata.u_page2 = 0xFFFFU;
-        signal_parent(udata.u_ptab);
+    udata.u_page = 0xFFFFU;
+    udata.u_page2 = 0xFFFFU;
+    signal_parent(udata.u_ptab);
 	nready--;
 	nproc--;
 	switchin(getproc());
@@ -1072,8 +1072,9 @@ void exec_or_die(void)
 	if (pid != 1)
 		swapper();
 #endif
-	kputs("Starting /init\n");
+	kputs("Reclaiming startup memory\n");
 	plt_discard();
+	kputs("Loading /init\n");
 	_execve();
 	panic(PANIC_NOINIT);	/* BIG Trouble if we Get Here!! */
 }

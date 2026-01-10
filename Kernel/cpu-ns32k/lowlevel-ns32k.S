@@ -34,25 +34,18 @@
 	.globl	syscall_handler
 	.globl	interrupt_handler
 
-#define SPSR_U 0x100
-#define SPSR_S 0x200
-#define SPSR_P 0x400
-#define SPSR_I 0x800	
 
 nmi_handler:
 	#movb	'@',@0xFE0000
 	rett	0
 
 abort_handler:
-	movb	'A',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	0,tos
-	
+
 do_exception:
 	movd	_udata_shadow,r6
-	sprw	psr,r0
-	andw	0xF7FF,r0		# Disable interrupts
-	lprw	psr,r0
+	bicpsrw SPSR_I			# Disable interrupts
 	sprd	sp,tos
 	bsr		_exception
 	adjspb	-8
@@ -66,42 +59,36 @@ do_exception:
 slave_handler:
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	1,tos
-	br	do_exception
+	br		do_exception
 
 illegal_handler:
-	movb	'I',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	2,tos
-	br	do_exception
+	br		do_exception
 
 divzero_handler:
-	movb	'Z',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	3,tos
-	br	do_exception
+	br		do_exception
 
 flag_handler:
-	movb	'F',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	4,tos
-	br	do_exception
+	br		do_exception
 
 breakpoint_handler:
-	movb	'B',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	5,tos
-	br	do_exception
+	br		do_exception
 
 trace_handler:
-	movb	'T',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	6,tos
-	br	do_exception
+	br		do_exception
 
 undefined_handler:
-	movb	'U',@0xFE0000
 	enter	[r0,r1,r2,r3,r6],0
-	movqd	1,tos
+	movqd	7,tos
 	br		do_exception
 
 syscall_handler:
@@ -203,8 +190,8 @@ no_signal:
 #	faulting.
 #
 with_signal:
-	movb	0,r0
-	jsr		pr0_debug
+	#movb	0,r0
+	#jsr		pr0_debug
 
 	movzbd	U_DATA__U_CURSIG(r6),r0
 	movd	U_DATA__U_SIGVEC(r6)[r0:d],r1
@@ -293,6 +280,7 @@ ___hard_di:
 	andw	0xF7FF,r1
 	lprw	psr,r1
 	ret	0
+
 ___hard_ei:
 	sprw	psr,r0
 	movw	r0,r1
@@ -300,11 +288,12 @@ ___hard_ei:
 	orw		0x800,r1
 	lprw	psr,r1
 	ret	0
+
 ___hard_irqrestore:
 	enter	[],0
 	sprw	psr,r0
 	andw	0xF7FF,r0
-	orw	8(fp),r0
+	orw		8(fp),r0
 	lprw	psr,r0
 	exit	[]
 	ret	0

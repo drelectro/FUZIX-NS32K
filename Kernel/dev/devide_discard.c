@@ -60,20 +60,31 @@ void devide_init_drive(uint_fast8_t drive)
     uint8_t *buffer;
     uint_fast8_t select;
 
-    select = (drive & 1) ? 0xF0 : 0xE0;
+    select = (drive & 1) ? 0xB0 : 0xA0;
 
     ide_select(drive);
 
     devide_writeb(ide_reg_devhead, select);
     kprintf("IDE drive %d: ", drive);
 
+    buffer = devide_readb(ide_reg_devhead);
+    kprintf("dh=%x ", buffer);
+    buffer = devide_readb(ide_reg_status);
+    kprintf("status=%x ", buffer);
+
     /* Cleaner way to probe */
     devide_writeb(ide_reg_lba_0, 0xAA);
-    if (devide_readb(ide_reg_lba_0) != 0xAA)
+    if (devide_readb(ide_reg_lba_0) != 0xAA){
+        kputs("not present.\n");
         goto out;
+    }
     devide_writeb(ide_reg_lba_0, 0x55);
-    if (devide_readb(ide_reg_lba_0) != 0x55)
+    if (devide_readb(ide_reg_lba_0) != 0x55){
+        kputs("not present.\n");
         goto out;
+    }
+
+    kputs("present. ");
 
 #ifdef IDE_8BIT_ONLY
     if (IDE_IS_8BIT(drive)) {

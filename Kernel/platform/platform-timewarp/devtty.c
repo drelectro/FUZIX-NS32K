@@ -13,28 +13,6 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-/*
-struct uart16x50 {
-	uint32_t data;		// ls, rx, tx 
-	uint32_t msier;		// ms or ier 
-	uint8_t pad1;
-	uint32_t fcr;
-	uint8_t pad2;
-	uint8_t lcr;
-	uint8_t pad3;
-	uint8_t mcr;
-	uint8_t pad4;
-	uint8_t lsr;
-	uint8_t pad5;
-	uint8_t msr;
-	uint8_t pad6;
-	uint8_t scr;
-	uint8_t pad7;
-};
-*/
-
-//static volatile struct uart16x50 * const uart = (struct uart16x50 *)0x00FE0000;
-
 static unsigned char tbuf1[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */

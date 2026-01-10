@@ -25,6 +25,9 @@ arg_t _open(void)
 	int w;
 	int j;
 
+
+	//kprintf("_open: '%s' flag=%x mode=%x\n", name, flag, mode);
+
 	parent = NULLINODE;
 
 	r = (flag + 1) & 1;
@@ -39,7 +42,8 @@ arg_t _open(void)
 
 	if ((oftindex = oft_alloc()) == -1)
 		goto nooft;
-
+	//kprintf("_open: allocated uindex=%d oftindex=%d\n", uindex, oftindex);
+	
 	ino = n_open_lock(name, &parent);
 	if (ino) {
 		/* We hold a reference to the found inode. but we don't need

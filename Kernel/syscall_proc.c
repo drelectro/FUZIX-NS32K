@@ -402,6 +402,11 @@ arg_t _fork(void)
 	arg_t r;
 	irqflags_t irq;
 
+#ifdef DEBUG
+	kprintf("Forking process %d with flags %x addr %p\n",
+		udata.u_ptab->p_pid, flags, (void *)addr);
+#endif
+
 	if (flags) {
 		udata.u_error = EINVAL;
 		return -1;
@@ -432,7 +437,7 @@ arg_t _fork(void)
 	r = dofork(new_process);
 
 #ifdef DEBUG
-	kprintf("Dofork %p (n %p)returns %d\n", udata.u_ptab,
+	kprintf("Dofork %p (n %p) returns %d\n", udata.u_ptab,
 		new_process, r);
 	kprintf("udata.u_page %d p_page %d\n", udata.u_page,
 		udata.u_ptab->p_page);
@@ -449,7 +454,9 @@ arg_t _fork(void)
 		nproc--;
 		nready--;
 	}
+	//kputs("fork done\n");
 	irqrestore(irq);
+	//kputs("fork returning\n");
 	return r;
 }
 

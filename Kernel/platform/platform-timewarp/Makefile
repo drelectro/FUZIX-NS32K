@@ -1,11 +1,11 @@
 
 CSRCS = devtty.c
-CSRCS += devices.c main.c libc.c
+CSRCS += devices.c main.c libc.c ppide.c
 
 ASRCS = ns32k.S crt0.S
 ASRCS += tricks.S
 
-DSRCS =  ../../dev/blkdev.c ../../dev/mbr.c ../../dev/devide.c ../../dev/devide_discard.c
+DSRCS =  ../../dev/blkdev.c ../../dev/mbr.c ../../dev/devide.c ../../dev/devide_discard.c 
 DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
 
 LSRCS = ../../lib/ns32krelocate.c
@@ -46,6 +46,7 @@ image:
 	../../tty.o ../../devsys.o ../../usermem.o ../../syscall_fs2.o \
 	../../syscall_fs3.o ../../syscall_exec32.o blkdev.o mbr.o \
 	devide.o devide_discard.o ../../flat.o ../../syscall_exec.o \
+	ppide.o \
 	ns32krelocate.o ../../cpu-ns32k/usermem_std-ns32k.o devtty.o \
 	libc.o ../../malloc.o > ../../fuzix.map
 	ns32k-pc532-netbsd-objcopy fuzix.aout -O binary ../../fuzix.bin

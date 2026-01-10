@@ -172,8 +172,8 @@ arg_t _execve(void)
 	udata.u_ptab->p_top = top;
 
 #ifdef DEBUG
-	kprintf("user space at %p\n", progbase);
-	kprintf("top at %p\n", progbase + bin_size);
+	//kprintf("user space at %p\n", progbase);
+	//kprintf("top at %p\n", progbase + bin_size);
 #endif
 
 	go = (uint32_t)udata.u_codebase + aout.a_entry;
@@ -197,6 +197,10 @@ arg_t _execve(void)
 	udata.u_count = aout.a_text - 0x20;
 	udata.u_sysio = false;
 	/* As we allocated this space we know the range is valid */
+#ifdef DEBUG
+	kprintf("execve32: Reading text segment to %p, size %u\n",
+		udata.u_base, udata.u_count);
+#endif
 	readi(ino, 0);
 	if (udata.u_done != aout.a_text - 0x20)
 		goto nogood4;
@@ -205,6 +209,10 @@ arg_t _execve(void)
 	udata.u_base = (uint8_t *) udata.u_database;
 	udata.u_count = aout.a_data + aout.a_trsize;
 	udata.u_sysio = false;
+#ifdef DEBUG
+	kprintf("execve32: Reading data+relocs segment to %p, size %u\n",
+		udata.u_base, udata.u_count);
+#endif
 	readi(ino, 0);
 	if (udata.u_done != aout.a_data + aout.a_trsize)
 		goto nogood4;
@@ -256,9 +264,11 @@ arg_t _execve(void)
 	kprintf("Code at %p , Data at %p Stack Size %u)\n",
 		udata.u_codebase, udata.u_database,
 		aout.stacksize);
-	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
+	kprintf("Go = %p udata.u_isp = %p\n", go, udata.u_isp);
+	kprintf("&udata = %p &udata.u_isp = %p\n", &udata, &udata.u_isp);
 #endif
 	doexec(go);
+	//kputs("execve32: done doexec\n");
 
 nogood4:
 	/* Must not run userspace */

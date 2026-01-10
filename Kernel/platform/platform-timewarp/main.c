@@ -109,11 +109,52 @@ void exception(struct trapdata *frame, uint32_t event)
 	uint32_t *usp;
 	int err;
 
+	switch (event) {
+	case 0: /* Abort */
+		kprintf("Exception: Abort\n");
+		break;
+
+	case 1: /* Slave (MMU or FPU) fault */
+		/* Check if we have an MMU fault */
+		//m = get_mmu_fault();
+		//if (m & MMU_FAULT) {
+		//	kprintf("Exception: MMU Fault at %x, SR=%x\n", get_fault_addr(), m);
+		//	sig = SIGSEGV;
+		//	break;
+		//}
+		/* Otherwise FPU fault */
+		kprintf("Exception: MMU/FPU Fault SR=%lx\n", m);
+		sig = SIGFPE;
+		break;
+	case 2:	/* Illegal instruction */
+		kprintf("Exception: Illegal Instruction at %lx\n", kframe[8]);
+		break;
+	case 3:	/* Division by zero */
+		kprintf("Exception: Division by Zero at %lx\n", kframe[8]);
+		break;
+	case 4:	/* Flag instruction */
+		kprintf("Exception: Flag Instruction at %lx\n", kframe[8]);
+		break;
+	case 5:	/* Breakpoint */
+		kprintf("Exception: Breakpoint at %x\n", kframe[8]);
+		break;
+	case 6:	/* Trace */
+		kprintf("Exception: Trace at %lx\n", kframe[8]);
+		break;
+	case 7:	/* Undefined opcode */
+		kprintf("Exception: Undefined Opcode at %lx\n", kframe[8]);
+		break;
+	default:
+		kprintf("Exception: Unknown event %d at %x\n", event, kframe[8]);
+		break;
+	}
+
 	if (kernel_flag) {
 		uint8_t i;
 		/* FIXME dump registers nicely */
-		for (i = 0; i < 16; i++)
-			kprintf("%x\n", *++kframe);
+		for (i = 0; i < 16; i++){
+			kprintf("F[%d] = %lx\n", i, *++kframe);
+		}
 		panic("ktrap");
 	}
 	/* Signal ourselves. We take care that the return out of

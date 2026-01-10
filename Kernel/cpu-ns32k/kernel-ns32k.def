@@ -80,3 +80,9 @@
 #define SIGPWR		30
 #define SIGSYS		31
 #define	SIGUNUSED	31
+
+
+#define SPSR_U 0x100
+#define SPSR_S 0x200
+#define SPSR_P 0x400
+#define SPSR_I 0x800

@@ -13,15 +13,16 @@
 # from switchout().
 #
 _plt_switchout:
-	sprw	psr,r0		# Interrupts off
-	andw	0xF7FF,r0
-	lprw	psr,r0
+	bicpsrw SPSR_I		# Interrupts off
 
-        # save machine state
+    # save machine state
 
-        # return from either switchout OR dofork, so they must both write
-        # U_DATA__U_SP with the following on the stack:
-	sprd	usp,r1
+    # return from either switchout OR dofork, so they must both write
+    # U_DATA__U_SP with the following on the stack:
+	bispsrw	SPSR_S		# Select SP1 (User)
+	sprd	sp,r1		# R1: Save USP into frame
+	bicpsrw	SPSR_S		# Back to SP0 (Supervisor)
+	#sprd	usp,r1
 	# Use enter so we stack fp. We will always exit [] on resume
 	enter	[r1,r2,r3,r4,r5,r7],0
 	sprd	fp,r0
@@ -29,29 +30,27 @@ _plt_switchout:
 	sprd	sp,r0
 	movd	r0,U_DATA__U_SP(r6)	# this is where the SP is restored in switchin
 
-        # find another process to run (may select this one again)
-        bsr	_getproc(pc)
+    # find another process to run (may select this one again)
+    bsr	_getproc(pc)
 
 	movd r0,tos
-        bsr	_switchin(pc)
+    bsr	_switchin(pc)
 
-        # We should never get here
-        br	_plt_monitor
+    # We should never get here
+    br	_plt_monitor
 
 _switchin:
-	sprw	psr,r0		# Interrupts off
-	andw	0xF7FF,r0
-	lprw	psr,r0
+	bicpsrw SPSR_I		# Interrupts off
 	enter	[],0
 	movd	8(fp),r0	# task to switch to
 	movd	P_TAB__P_UDATA_OFFSET(r0),r6
 	# Check udata is consistent with pointer
 	cmpd	U_DATA__U_PTAB(r6),r0
-	bne	switchinfail
+	bne		switchinfail
 
 	movqb	P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
 	movd	r6,_udata_shadow(pc)	# For IRQ etc use
-        movd	U_DATA__U_SP(r6),r1	# Recover kernel stack pointer
+    movd	U_DATA__U_SP(r6),r1	# Recover kernel stack pointer
 	lprd	sp,r1
 
 	movqd	0,tos
@@ -59,23 +58,24 @@ _switchin:
 	bsr	_pagemap_switch(pc)
 	adjspb	-8			# Unstack 8 bytes
 
-        # runticks = 0
+    # runticks = 0
 	movqw	0,_runticks(pc)
 
  	# restore machine state from the recovered kstack
 	movd	tos,r1			# Top of the stack is the saved fp
 	lprd	fp,r1
 	exit	[r1,r2,r3,r4,r5,r7]	# That allows us to get the registers
-	lprd	usp,r1			# Restore user SP saved in R1
+	bispsrw	SPSR_S		# Select SP1 (User)
+	lprd	sp,r1		# Restore user SP saved in R1
+	bicpsrw	SPSR_S		# Back to SP0 (Supervisor)
+	#lprd	usp,r1		# Restore user SP saved in R1
 
-        cmpqb	0,U_DATA__U_ININTERRUPT(r6)
-        bne	keepoff # in ISR, leave interrupts off
-	sprw	psr,r0
-	orw	0x0800,r0
-	lprw	psr,r0
+    cmpqb	0,U_DATA__U_ININTERRUPT(r6)
+    bne		keepoff 	# in ISR, leave interrupts off
+	bispsrw	SPSR_I
 keepoff:
-	movqw	0,r0			# fork return never comes this route
-        ret	0			# return with interrupts on
+	movqw	0,r0		# fork return never comes this route
+    ret		0			# return with interrupts on
 
 switchinfail:
 	bsr	outr0hex
@@ -94,7 +94,7 @@ switchinfail:
 	#
 _dofork:
 	enter	[r1,r2,r3,r4,r5,r7],0
-	movd	8(fp),r0			#	child p_tab
+	movd	8(fp),r0						# child p_tab
 	movd	P_TAB__P_UDATA_OFFSET(r0),r2	# Child udata
 
 	# copy parent udata in r6 to child udata
@@ -110,7 +110,7 @@ _dofork:
 	# Configure the child udata
 	movd	P_TAB__P_UDATA_OFFSET(r0), tos
 	movd	r0, tos
-	bsr	_makeproc(pc)
+	bsr		_makeproc(pc)
 	adjspb	-8		# Adjsp is subtract based !
 
 	movd	tos, r3
@@ -146,7 +146,9 @@ _dofork:
 	subd	32,r1
 	movd	r0,28(r1)	# Old FP
 	# The registers (don't care)
-	sprd	usp,24(r1)	# R1: Save USP into frame
+	bispsrw	SPSR_S		# Select SP1 (User)
+	sprd	sp,24(r1)	# R1: Save USP into frame
+	bicpsrw	SPSR_S		# Back to SP0 (Supervisor)
 	movd	0,20(r1)	# R2
 	movd	0,16(r1)	# R3
 	movd	0,12(r1)	# R4
