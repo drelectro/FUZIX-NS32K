@@ -34,6 +34,7 @@
 # nascom:	Nascom 2 or 3 with page mode RAM and CF on PIO
 # nc100:	Amstrad NC100 (or emulator)
 # nc200:	Amstrad NC200 (or emulator)
+# ns32k-104: DrElectro's PC104 like NS32K system 
 # p112:		DX Designs P112
 # pcw8256:	Amstrad PCW series
 # pentagon:	Pentagon (spectrum not quite clone)
@@ -92,7 +93,7 @@
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
 # zxuno:	ZX Uno FPGA system
 
-TARGET ?= timewarp
+TARGET ?= ns32k-104
 
 include version.mk
 

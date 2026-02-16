@@ -26,3 +26,6 @@
 /syscall_armm4
 /syscall_msp430x
 /syscall_riscv32
+/syscall_8070
+/syscall_ns32k
+
