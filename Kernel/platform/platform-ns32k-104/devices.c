@@ -35,19 +35,17 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-  ppide_init();
+  //ppide_init();
   devide_init();
 }
 
-/* Timewarp uses PPIDE, see ppide.c for data transfer routines */
-/*
-// 8bit CF adapter 
+
 void devide_read_data(void)
 {
   uint16_t n  = 512;
   uint8_t *p = (uint8_t *)blk_op.addr;
   while(n--)
-    *p++ = *(volatile uint8_t *)0x00F00020;
+    *p++ = *(volatile uint8_t *)0x00FEC000;
 }
 
 void devide_write_data(void)
@@ -55,6 +53,6 @@ void devide_write_data(void)
   uint16_t n  = 512;
   uint8_t *p = (uint8_t *)blk_op.addr;
   while(n--)
-    *((volatile uint8_t *)0x00F00020) = *p++;
+    *((volatile uint8_t *)0x00FEC000) = *p++;
 }
-*/
+

@@ -46,7 +46,6 @@ image:
 	../../tty.o ../../devsys.o ../../usermem.o ../../syscall_fs2.o \
 	../../syscall_fs3.o ../../syscall_exec32.o blkdev.o mbr.o \
 	devide.o devide_discard.o ../../flat.o ../../syscall_exec.o \
-	ppide.o \
 	ns32krelocate.o ../../cpu-ns32k/usermem_std-ns32k.o devtty.o \
 	libc.o ../../malloc.o > ../../fuzix.map
 	ns32k-pc532-netbsd-objcopy fuzix.aout -O binary ../../fuzix.bin

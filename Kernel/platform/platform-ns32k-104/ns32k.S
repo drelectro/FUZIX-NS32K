@@ -126,19 +126,19 @@ init_icu:
 	#
 
 	movb 	0xFF, @0xFFFE04 	# ELTG - IR0-7 Level Sensitive 
-	movb 	0xFF, @0xFFFE06 	# ELTG - IR8-15 Level Sensitive
+	movb 	0xFF, @0xFFFE08 	# ELTG - IR8-15 Level Sensitive
 
-	movb 	0xFF, @0xFFFE08 	# TPL - Configure IR0-7 as active high 
-	movb 	0xFF, @0xFFFE0A 	# TPL - Configure IR8-15 as active high
+	movb 	0xFF, @0xFFFE10 	# TPL - Configure IR0-7 as active high 
+	movb 	0xFF, @0xFFFE14 	# TPL - Configure IR8-15 as active high
 
-	movb 	0x40, @0xFFFE2C 	# CCTL - Enable Clock/4 prescaler
-	movb  	0x00, @0xFFFE20 	# Enable ICU
+	movb 	0x40, @0xFFFE58 	# CCTL - Enable Clock/4 prescaler
+	movb  	0x00, @0xFFFE40 	# MCTL - Enable ICU Clock
 
-	movb    0xDF, @0xFFFE14 	# IMSKL Unmask IR5 (UART0) 
-	# movb    0xFF, @0xFFFE14 	# IMSKL Mask IR0-7 
+	# movb    0xDF, @0xFFFE28 	# IMSKL Unmask IR5 (UART0) 
+	movb    0xFF, @0xFFFE28 	# IMSKL Mask IR0-7 
 
-	# movb    0x7F, @0xFFFE16 	# IMSKH Unmask IR15 (UART0)
-	# movb    0xFF, @0xFFFE16 	# IMSKH Mask IR8-15
+	 movb    0x7F, @0xFFFE2C 	# IMSKH Unmask IR15 (UART0)
+	# movb    0xFF, @0xFFFE2C 	# IMSKH Mask IR8-15
 
 	ret 0
 

@@ -162,13 +162,17 @@ interrupt_handler:
 	cmpqb	P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
 	bne		no_ready
 	movqb	P_READY,P_TAB__P_STATUS_OFFSET(r0)
+
 no_ready:
 	bsr		_switchout
+
 no_preempt:
 	cmpb	0,U_DATA__U_CURSIG(r6)
 	bne		with_signal
+
 no_signal:
-	movb 	0, @0xFFFE10 # Clear ISRV (temporary hack until we enable vectored interrupts)
+	movb 	0, @0xFFFE20 # Clear ISRVL (temporary hack until we enable vectored interrupts)
+	movb 	0, @0xFFFE24 # Clear ISRVH (temporary hack until we enable vectored interrupts)
 	exit	[r0,r1,r2,r3,r6]
 	rett	0
 #

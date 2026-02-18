@@ -34,15 +34,11 @@
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define NMOUNTS	 4	      /* Number of mounts at a time */
 
 #define MAX_BLKDEV 4
 
 #define CONFIG_IDE
-#define CONFIG_PPIDE
-
-
-
 
 #define plt_copyright()
 
