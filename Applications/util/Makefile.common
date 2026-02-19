@@ -54,6 +54,7 @@ SRCS  = \
 	decomp16.c \
 	df.c \
 	dosread.c \
+	dhrystone.c \
 	du.c \
 	echo.c \
 	ed.c \
