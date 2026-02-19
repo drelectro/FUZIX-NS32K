@@ -159,16 +159,6 @@ void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-/* Timer is a hack for now */
-static void timer_event(void)
-{
-	/* External 10Hz generator */
-	//if (uart->msr & 0x20)
-	//	timer_interrupt();
-	if (*(volatile unsigned char *)UART0_MSR & 0x20)
-		timer_interrupt();
-}
-
 //void tty_poll(uint8_t minor, struct uart16x50 volatile *u)
 void tty_poll(uint8_t minor)
 {	
@@ -176,10 +166,7 @@ void tty_poll(uint8_t minor)
 	//	tty_inproc(minor, uart->data);
 	if (*(volatile unsigned char *)UART0_LSR & 0x01)
 		tty_inproc(minor, *(volatile unsigned char *)UART0_RBR);
-	//if (uart->msr & 0x02)
-	//	timer_event();
-	if (*(volatile unsigned char *)UART0_MSR & 0x02)
-		timer_event();
+
 }
 
 void tty_interrupt(void)

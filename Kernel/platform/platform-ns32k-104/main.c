@@ -110,7 +110,7 @@ void exception(struct trapdata *frame, uint32_t event)
 
 	switch (event) {
 	case 0: /* Abort */
-		kprintf("Exception: Abort\n");
+		kprintf("\r\nException: Abort\n");
 		break;
 
 	case 1: /* Slave (MMU or FPU) fault */
@@ -122,29 +122,29 @@ void exception(struct trapdata *frame, uint32_t event)
 		//	break;
 		//}
 		/* Otherwise FPU fault */
-		kprintf("Exception: MMU/FPU Fault SR=%lx\n", m);
+		kprintf("\r\nException: MMU/FPU Fault SR=%lx\n", m);
 		sig = SIGFPE;
 		break;
 	case 2:	/* Illegal instruction */
-		kprintf("Exception: Illegal Instruction at %lx\n", kframe[8]);
+		kprintf("\r\nException: Illegal Instruction at %lx\n", kframe[8]);
 		break;
 	case 3:	/* Division by zero */
-		kprintf("Exception: Division by Zero at %lx\n", kframe[8]);
+		kprintf("\r\nException: Division by Zero at %lx\n", kframe[8]);
 		break;
 	case 4:	/* Flag instruction */
-		kprintf("Exception: Flag Instruction at %lx\n", kframe[8]);
+		kprintf("\r\nException: Flag Instruction at %lx\n", kframe[8]);
 		break;
 	case 5:	/* Breakpoint */
-		kprintf("Exception: Breakpoint at %x\n", kframe[8]);
+		kprintf("\r\nException: Breakpoint at %x\n", kframe[8]);
 		break;
 	case 6:	/* Trace */
-		kprintf("Exception: Trace at %lx\n", kframe[8]);
+		kprintf("\r\nException: Trace at %lx\n", kframe[8]);
 		break;
 	case 7:	/* Undefined opcode */
-		kprintf("Exception: Undefined Opcode at %lx\n", kframe[8]);
+		kprintf("\r\nException: Undefined Opcode at %lx\n", kframe[8]);
 		break;
 	default:
-		kprintf("Exception: Unknown event %d at %x\n", event, kframe[8]);
+		kprintf("\r\nException: Unknown event %d at %x\n", event, kframe[8]);
 		break;
 	}
 
