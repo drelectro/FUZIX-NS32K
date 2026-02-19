@@ -7,61 +7,41 @@
 		.globl __bss_start
 
 		.text
-/*
-head:
-		.ascii "BOOTNS32"
 
-		addr	head(pc),r3
-
-		# Relocate ourselves down correctly
-		movd	0x10,r0
-		addr	relocate(pc),r1
-		movd	0x1f000,r2
-		movsd
-		jump	0x1f000
 #
-#	This little block is run high up
-#
-relocate:
-		movd	0x4000,r0
-		movd	r3,r1
-		movd	0x8000,r2
-		movsd
-		jump	start
-*/
-#
-#	And this is where we enter the code in proper location
+#	
 #
 start:
-		setcfg []			# Set CFG to all zeros to start with
-		lprd sp,0x7fffc		# Set stack to top of memory
+		setcfg [i]				# Set CFG to reflect system configuration
+								# WARNING: lower case only !
 
-		# Stick our exception handler pointer in 0x80000
-		# FIXME
-		# Set up the ROM int and map tables.
-		# addr inttab,r0
-		# lprd intbase,r0
-		# And modules - not that we use them
-		# Second module entry uses start of RAM
+		#
+		# Configure sp, intbase and sbase to suit our desired memory map
+		#
+		lprd sp, 0x07fffc		# Set stack to top of memory
+		lprd intbase, 0x001000	# Set intbase
+		lprd sb, 0x002000		# Set sbase (not used)
+
 
 		# Setup module table
 		#
-		# At present we just have 2 module Interrupts and Kernel (that's us)
-		# Interrupt mod table is at 0x0000 (move to 0x0020)
+		# At present we just have 2 modules, Interrupts and Kernel (that's us)
+		# Interrupt mod table is at 0x0020 
 		# Kernel mod table is at 0x0x0010
 		#
 		# At present both modules are set to all zeros.
-		# Which is fine for now
+		# We should set the Interrupt mod table base to reflect the actual base 
+		# address of the interrupt routines
 		#
 
 		movd 0,r0
 
 		# Setup Interrupt module descriptor
 		#
-		movd r0, @0x000000 	# Static Base 
-		movd r0, @0x000004 	# Link Base
-		movd r0, @0x000008 	# Program Base
-		movd r0, @0x00000C 	# Reserved
+		movd r0, @0x000020 	# Static Base 
+		movd r0, @0x000024 	# Link Base
+		movd r0, @0x000028 	# Program Base
+		movd r0, @0x00002C 	# Reserved
 
 
 		# Setup Kernel module descriptor
@@ -76,15 +56,8 @@ start:
 		lprw mod, r0		# Set mod register to kernel module descriptor
 
 
-
-		#movd 0x08,r0
-		#lprw mod,r0
-
-
-		#movd sbase,r0
-		#lprd sb,r0
-		
-
+		# Clear BSS
+		#
 		addr __bss_start,r0
 		addr __end,r1
 

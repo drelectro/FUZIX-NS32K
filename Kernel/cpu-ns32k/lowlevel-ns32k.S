@@ -22,6 +22,7 @@
 
 	.globl	_udata_shadow
 
+	.globl	nvi_handler
 	.globl	nmi_handler
 	.globl	abort_handler
 	.globl	slave_handler
@@ -33,11 +34,8 @@
 	.globl	undefined_handler
 	.globl	syscall_handler
 	.globl	interrupt_handler
+	.globl  timer_handler
 
-
-nmi_handler:
-	#movb	'@',@0xFE0000
-	rett	0
 
 abort_handler:
 	enter	[r0,r1,r2,r3,r6],0
@@ -51,7 +49,7 @@ do_exception:
 	adjspb	-8
 	movb	U_DATA__U_CURSIG(r6),r0
 	cmpqb	0,r0
-	bne		with_signal
+	bne		with_signal_nonvec
 	exit	[r0,r1,r2,r3,r6]
 	# Retry the instruction
 	rett	0
@@ -90,6 +88,19 @@ undefined_handler:
 	enter	[r0,r1,r2,r3,r6],0
 	movqd	7,tos
 	br		do_exception
+
+nmi_handler:
+	enter	[r0,r1,r2,r3,r6],0
+	movd	8,tos
+	br		do_exception
+
+nvi_handler:
+	enter	[r0,r1,r2,r3,r6],0
+	movb	@0xFFFE04,r0
+	movb 	r0,@0x2000
+	movd	9,tos
+	br		do_exception
+	
 
 syscall_handler:
 	bicpsrw	SPSR_I			# Disable interrupts
@@ -139,7 +150,7 @@ return_via_signal:
 	exit	[r6]
 	enter	[r0,r1,r2,r3,r6],0
 	movd	_udata_shadow(pc),r6
-	br		with_signal
+	br		with_signal_nonvec
 
 interrupt_handler:
 	# Save what the C compiler will not
@@ -168,13 +179,17 @@ no_ready:
 
 no_preempt:
 	cmpb	0,U_DATA__U_CURSIG(r6)
-	bne		with_signal
+	bne		with_signal_vec
 
 no_signal:
-	movb 	0, @0xFFFE20 # Clear ISRVL (temporary hack until we enable vectored interrupts)
-	movb 	0, @0xFFFE24 # Clear ISRVH (temporary hack until we enable vectored interrupts)
 	exit	[r0,r1,r2,r3,r6]
-	rett	0
+	reti	
+
+timer_handler:
+	enter	[r0,r1,r2,r3,r6],0
+	bsr		_timer_interrupt;
+	exit	[r0,r1,r2,r3,r6]
+	reti	
 #
 #	Exception handling. Push a frame onto the user stack
 #	and doctor the trap return stack.
@@ -193,6 +208,17 @@ no_signal:
 #	If we ever do protected mode we'll need to handle these
 #	faulting.
 #
+
+with_signal_vec:
+	jsr with_signal
+	exit	[r0,r1,r2,r3,r6]
+	reti	0		# into the signal handler
+
+with_signal_nonvec:
+	jsr with_signal
+	exit	[r0,r1,r2,r3,r6]
+	rett	0		# into the signal handler
+
 with_signal:
 	#movb	0,r0
 	#jsr		pr0_debug
@@ -227,8 +253,9 @@ with_signal:
 	bispsrw SPSR_S					# Select User Stack (SP1)
 	lprd	sp,r0
 	bicpsrw SPSR_S					# Back to supervisor stack (SP0)
-	exit	[r0,r1,r2,r3,r6]
-	rett	0		# into the signal handler
+	ret		0
+	#exit	[r0,r1,r2,r3,r6]
+	#rett	0		# into the signal handler
 
 _doexec:
     enter	[],0
