@@ -12,7 +12,7 @@
 #	
 #
 start:
-		setcfg [i]				# Set CFG to reflect system configuration
+		setcfg [i,f]			# Set CFG to reflect system configuration
 								# WARNING: lower case only !
 
 		#

@@ -1,6 +1,6 @@
 
 CSRCS = devtty.c
-CSRCS += devices.c main.c libc.c ppide.c
+CSRCS += devices.c main.c libc.c 
 
 ASRCS = ns32k.S crt0.S
 ASRCS += tricks.S

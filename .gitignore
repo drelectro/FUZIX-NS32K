@@ -25,3 +25,4 @@ bin
 *.debug
 *.b0
 *.out
+*.aout
