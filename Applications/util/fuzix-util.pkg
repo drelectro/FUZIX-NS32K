@@ -136,6 +136,8 @@ f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs
 f 0755 /bin/yes         yes
 
+f 0755 /bin/fpbench     fpbench
+
 f 0655 /usr/man/man1/cp.1        cp.1
 f 0655 /usr/man/man1/cpuinfo.1   cpuinfo.1
 f 0655 /usr/man/man1/date.1      date.1

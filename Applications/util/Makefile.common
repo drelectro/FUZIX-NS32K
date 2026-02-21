@@ -54,7 +54,6 @@ SRCS  = \
 	decomp16.c \
 	df.c \
 	dosread.c \
-	dhrystone.c \
 	du.c \
 	echo.c \
 	ed.c \
@@ -110,7 +109,9 @@ SRCS  = \
 	which.c \
 	who.c \
 	write.c \
-	xargs.c
+	xargs.c \
+	dhrystone.c \
+	fpbench.c\
 
 SRCTC = fleamacs.c \
 	less.c \
