@@ -29,6 +29,13 @@ static char *rl_base;
 static char *rl_cursor;
 static uint8_t rl_inhist;
 
+static rl_complete_fn_t rl_complete_fn;
+
+void rl_set_complete(rl_complete_fn_t fn)
+{
+    rl_complete_fn = fn;
+}
+
 #ifdef WITH_HISTORY
 static char *rl_hbuffer;
 static char *rl_hend;
@@ -162,6 +169,13 @@ static void insert(char c)
     }
 }
 
+static void insert_str(const char *s, size_t n)
+{
+    while (n--) {
+        insert(*s++);
+    }
+}
+
 static struct termios saved_term, term;
 static uint8_t do_cleanup = 0;
 
@@ -224,6 +238,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
     uint8_t c;
     uint_fast8_t quote = 0;
     uint_fast8_t esc = 0;
+    uint_fast8_t esc_param = 0;
     register uint_fast8_t r;
 
     rl_base = input;
@@ -267,11 +282,66 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 insert(c);
                 continue;
             } else if (esc) {
-                if (c == '[')
+                /*
+                 * Basic escape sequence handling for cursor keys.
+                 * We translate common sequences into the existing control
+                 * key bindings (e.g. End -> Ctrl-E).
+                 */
+                if (esc == 1) {
+                    if (c == '[') {
+                        esc = 2;
+                        esc_param = 0;
+                        continue;
+                    }
+                    if (c == 'O') {
+                        esc = 3;
+                        continue;
+                    }
+                    esc = 0;
                     continue;
-                esc = 0;
-                if (c >= 'A' && c <= 'N')
-                    c = CTRL("PNFB   A     E"[c - 'A']);
+                }
+                if (esc == 2) {
+                    /* CSI sequences: ESC [ ... */
+                    if (c >= '0' && c <= '9') {
+                        esc_param = esc_param * 10 + (c - '0');
+                        esc = 4;
+                        continue;
+                    }
+                    esc = 0;
+                    if (c == 'A') c = CTRL('P');
+                    else if (c == 'B') c = CTRL('N');
+                    else if (c == 'C') c = CTRL('F');
+                    else if (c == 'D') c = CTRL('B');
+                    else if (c == 'H') c = CTRL('A');
+                    else if (c == 'F') c = CTRL('E');
+                    else continue;
+                } else if (esc == 3) {
+                    /* SS3 sequences: ESC O ... */
+                    esc = 0;
+                    if (c == 'H') c = CTRL('A');
+                    else if (c == 'F') c = CTRL('E');
+                    else continue;
+                } else if (esc == 4) {
+                    /* CSI numeric sequences: ESC [ <n> ... */
+                    if (c >= '0' && c <= '9') {
+                        esc_param = esc_param * 10 + (c - '0');
+                        continue;
+                    }
+                    esc = 0;
+                    if (c == '~') {
+                        if (esc_param == 1 || esc_param == 7)
+                            c = CTRL('A');
+                        else if (esc_param == 4 || esc_param == 8)
+                            c = CTRL('E');
+                        else
+                            continue;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    esc = 0;
+                    continue;
+                }
             }
             else if (c == '\n')
                 break;
@@ -279,6 +349,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
         switch(c) {
             case '\033':
                 esc = 1;
+                esc_param = 0;
                 break;
             case '\r':
                 break;
@@ -335,6 +406,25 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 write(ofd, prompt, strlen(prompt));
                 reprint_start();
                 reprint_end(' ');
+                break;
+            case '\t':
+                if (rl_complete_fn) {
+                    char ins[128];
+                    int ilen;
+                    ins[0] = 0;
+                    ilen = rl_complete_fn(rl_base, (size_t)(rl_end - rl_base),
+                                          (size_t)(rl_cursor - rl_base),
+                                          ins, sizeof(ins));
+                    if (ilen > 0) {
+                        if ((size_t)ilen >= sizeof(ins))
+                            ilen = sizeof(ins) - 1;
+                        insert_str(ins, (size_t)ilen);
+                    } else {
+                        write(ofd, "\a", 1);
+                    }
+                } else {
+                    write(ofd, "\a", 1);
+                }
                 break;
             default:
                 if (c > 31)

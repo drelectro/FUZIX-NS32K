@@ -55,7 +55,7 @@ SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
 SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
 SRC_C += isxdigit.c toupper.c tolower.c
 # tty layer
-SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
+SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c tcsendbreak.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
 # scanf
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
