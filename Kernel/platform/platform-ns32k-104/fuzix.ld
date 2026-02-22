@@ -2,18 +2,19 @@ OUTPUT_ARCH(ns32k)
 
 SEARCH_DIR(.)
 
-/*
- * Modified from 
- * ram (rwx) : ORIGIN = 0x8000, LENGTH = 0x80000
- */
 
 MEMORY
 {
-  ram (rwx) : ORIGIN = 0x09000, LENGTH = 0x37000
+   ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x6E000 
+   rom (rx) : ORIGIN = 0x70000, LENGTH = 0x10000  
+
+   /* ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x7E000 
+   rom (rx) : ORIGIN = 0xF02000, LENGTH = 0x1E000 */
 }
 
 /*
- * stick everything in ram (of course)
+ * Place "code" in ROM section and data in RAM 
+ * 
  */
 SECTIONS
 {
@@ -29,17 +30,30 @@ SECTIONS
     . = ALIGN(0x4);
     _etext = .;
     *(.lit)
-  } > ram
+  } > rom
+
+  /*
+   * The ns32k toolchain will otherwise keep advancing '.' from the ROM
+   * placement of .text, so explicitly reset '.' to RAM before placing
+   * the run-time data sections.
+   */
+  . = ORIGIN(ram);
 
   .data :
   {
+    . = ALIGN(0x4);
+    __data_start = .;
     *(.got.plt) *(.got)
     *(.shdata)
     *(.data .data.*)
+    . = ALIGN(0x4);
+    __data_end = .;
     _edata = .;
-  } > ram
+  } > ram AT > rom
 
-  .bss :
+  __data_load = LOADADDR(.data);
+
+  .bss (NOLOAD) :
   {
     . = ALIGN(0x4);
     __bss_start = . ;
