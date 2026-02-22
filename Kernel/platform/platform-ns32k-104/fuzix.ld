@@ -5,11 +5,11 @@ SEARCH_DIR(.)
 
 MEMORY
 {
-   ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x6E000 
-   rom (rx) : ORIGIN = 0x70000, LENGTH = 0x10000  
+   /* ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x6E000 
+   rom (rx) : ORIGIN = 0x70000, LENGTH = 0x10000  */
 
-   /* ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x7E000 
-   rom (rx) : ORIGIN = 0xF02000, LENGTH = 0x1E000 */
+   ram (rwx) : ORIGIN = 0x02000, LENGTH = 0x7E000 
+   rom (rx) : ORIGIN = 0xF02000, LENGTH = 0x1E000 
 }
 
 /*

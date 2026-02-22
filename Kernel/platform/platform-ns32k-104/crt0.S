@@ -8,6 +8,7 @@
 		.globl __data_load
 		.globl __data_start
 		.globl __data_end
+		.globl start
 
 		.text
 

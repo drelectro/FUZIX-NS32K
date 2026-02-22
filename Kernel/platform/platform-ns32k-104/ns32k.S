@@ -50,6 +50,8 @@ _plt_monitor:
 set_interrupt_table_entry:
 	sprd    intbase, r3			# Get intbase
 	movw r2, r3 [r0:d]			# Set module
+	subd start, r1				# Adjust the handler address to be an offset from the module "program base"
+								# In our case "program base" always == start.
 	movw r1, 2(r3) [r0:d]		# Set handler
 	ret 0
 
@@ -191,7 +193,7 @@ init_icu:
 	#
 
 	# movb    0xDF, @0xFFFE28 	# IMSKL Unmask IR5 (UART0) 
-	movb    0xFE, @0xFFFE28 	# IMSKL Mask IR0-7 
+	movb    0xF7, @0xFFFE28 	# IMSKL Unmask IR0 (ICU) Mask IR1-7 
 
 	 movb    0x7F, @0xFFFE2C 	# IMSKH Unmask IR15 (UART0)
 	# movb    0xFF, @0xFFFE2C 	# IMSKH Mask IR8-15
